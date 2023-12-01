@@ -1,8 +1,8 @@
-fn part_1(input: &str) {
+fn part_1(_input: &str) {
     todo!()
 }
 
-fn part_2(input: &str) {
+fn part_2(_input: &str) {
     todo!()
 }
 
