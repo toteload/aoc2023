@@ -8,23 +8,22 @@ use nom::{
 
 const INPUT: &str = include_str!("../../input/day_01.txt");
 
-fn part_1(input: &str) {
-    let mut answer = 0;
-
-    let mut buf = Vec::new();
-    for line in input.lines() {
-        buf.clear();
-
-        let nums = line.as_bytes().iter().filter_map(|&b| {
-            if b.is_ascii_digit() {
+fn try_digit(b: &u8) -> Option<u32> {
+if b.is_ascii_digit() {
                 Some((b - b'0') as u32)
             } else {
                 None
             }
-        });
-        buf.extend(nums);
+}
 
-        answer += buf[0] * 10 + buf.last().unwrap();
+fn part_1(input: &str) {
+    let mut answer = 0;
+
+    for line in input.lines() {
+        let a = line.as_bytes().iter().filter_map(try_digit).next().unwrap();
+        let b = line.as_bytes().iter().rev().filter_map(try_digit).next().unwrap();
+
+        answer += a * 10 + b;
     }
 
     println!("{answer}");
@@ -52,25 +51,38 @@ fn a_digit(input: &str) -> IResult<&str, u32> {
     )(input)
 }
 
-fn parse_numbers(line: &str, buf: &mut Vec<u32>) {
-    for start in 0..line.len() {
-        let res = alt((a_digit, written_number))(&line[start..]);
-        if let Ok((_, x)) = res {
-            buf.push(x);
-        }
-    }
-}
-
 fn part_2(input: &str) {
     let mut answer = 0;
 
-    let mut buf = Vec::new();
     for line in input.lines() {
-        buf.clear();
 
-        parse_numbers(line, &mut buf);
+        let a = {
+            let mut y = 0;
+            for start in 0..line.len() {
+                let res = alt((a_digit, written_number))(&line[start..]);
+                if let Ok((_, x)) = res {
+                    y = x;
+                    break;
+                }
+            }
 
-        answer += buf[0] * 10 + buf.last().unwrap();
+            y
+        };
+
+        let b = {
+            let mut y = 0;
+            for start in (0..line.len()).rev() {
+                let res = alt((a_digit, written_number))(&line[start..]);
+                if let Ok((_, x)) = res {
+                    y = x;
+                    break;
+                }
+            }
+
+            y
+        };
+
+        answer += a * 10 + b;
     }
 
     println!("{answer}")
