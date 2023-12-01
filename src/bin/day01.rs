@@ -9,11 +9,11 @@ use nom::{
 const INPUT: &str = include_str!("../../input/day_01.txt");
 
 fn try_digit(b: &u8) -> Option<u32> {
-if b.is_ascii_digit() {
-                Some((b - b'0') as u32)
-            } else {
-                None
-            }
+    if b.is_ascii_digit() {
+        Some((b - b'0') as u32)
+    } else {
+        None
+    }
 }
 
 fn part_1(input: &str) {
@@ -21,7 +21,13 @@ fn part_1(input: &str) {
 
     for line in input.lines() {
         let a = line.as_bytes().iter().filter_map(try_digit).next().unwrap();
-        let b = line.as_bytes().iter().rev().filter_map(try_digit).next().unwrap();
+        let b = line
+            .as_bytes()
+            .iter()
+            .rev()
+            .filter_map(try_digit)
+            .next()
+            .unwrap();
 
         answer += a * 10 + b;
     }
@@ -55,7 +61,6 @@ fn part_2(input: &str) {
     let mut answer = 0;
 
     for line in input.lines() {
-
         let a = {
             let mut y = 0;
             for start in 0..line.len() {
