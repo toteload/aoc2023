@@ -10,7 +10,8 @@ I run the solutions on a desktop with a 12-core Ryzen 9 7900X and 32GB RAM.
 
 | Problem       | Duration |
 | ------------- | -------- |
-| Day 1, part 1 | 40 μs    |
-| Day 1, part 2 | 110 μs   |
-| ------------- | -------- |
-| Total         | 150 μs   |
+| Day 1, part 1 |    40 μs |
+| Day 1, part 2 |   110 μs |
+| Day 2, part 1 |    26 μs |
+| Day 2, part 2 |    29 μs |
+| Total         |   205 μs |
