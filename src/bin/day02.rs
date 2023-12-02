@@ -9,31 +9,18 @@ fn part_1(input: &str) {
         'game: {
             for draw in draws {
                 for grab in draw.split(',') {
+                    // Skip the preceding space
                     let grab = &grab[1..];
 
                     let mut it = grab.split(' ');
-                    let amount = it.next().unwrap();
+                    let amount = it.next().unwrap().parse::<u8>().unwrap();
                     let color = it.next().unwrap();
 
-                    if color == "red" {
-                        let x = amount.parse::<u8>().unwrap();
-                        if x > 12 {
-                            break 'game;
-                        }
-                    }
-
-                    if color == "green" {
-                        let x = amount.parse::<u8>().unwrap();
-                        if x > 13 {
-                            break 'game;
-                        }
-                    }
-
-                    if color == "blue" {
-                        let x = amount.parse::<u8>().unwrap();
-                        if x > 14 {
-                            break 'game;
-                        }
+                    match color {
+                        "red" if amount > 12 => break 'game,
+                        "green" if amount > 13 => break 'game,
+                        "blue" if amount > 14 => break 'game,
+                        _ => (),
                     }
                 }
             }
@@ -57,29 +44,21 @@ fn part_2(input: &str) {
 
         for draw in draws {
             for grab in draw.split(',') {
+                // Skip the preceding space
                 let grab = &grab[1..];
 
                 let mut it = grab.split(' ');
-                let amount = it.next().unwrap();
+                let amount = it.next().unwrap().parse::<u32>().unwrap();
                 let color = it.next().unwrap();
 
-                if color == "red" {
-                    let x = amount.parse::<u32>().unwrap();
-                    red = red.max(x);
-                }
-
-                if color == "green" {
-                    let x = amount.parse::<u32>().unwrap();
-                    green = green.max(x);
-                }
-
-                if color == "blue" {
-                    let x = amount.parse::<u32>().unwrap();
-                    blue = blue.max(x);
+                match color {
+                    "red" => red = red.max(amount),
+                    "green" => green = green.max(amount),
+                    "blue" => blue = blue.max(amount),
+                    _ => unreachable!(),
                 }
             }
         }
-
 
         sum += red * green * blue;
     }
