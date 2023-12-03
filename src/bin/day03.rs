@@ -1,15 +1,30 @@
-fn part_1(_input: &str) {
+const INPUT: &str = include_str!("../../input/day_03.txt");
+
+fn part_1(input: &str) {
+    let mut symbols = Vec::new();
+
+    for (i, line) in input.lines().enumerate() {
+        let line_symbols = line.as_bytes().iter().enumerate().filter_map(|(j, &b)| {
+            if !b.is_ascii_digit() && b != b'.' {
+                Some((i, j))
+            } else {
+                None
+            }
+        });
+
+        symbols.extend(line_symbols);
+    }
+
+    println!("{symbols:?}");
+
     todo!()
 }
 
-fn part_2(_input: &str) {
+fn part_2(input: &str) {
     todo!()
 }
 
 fn main() {
-    let input =
-        std::fs::read_to_string("input/day_03.txt").expect("Should be able to read input file");
-
-    part_1(&input);
-    part_2(&input);
+    part_1(INPUT);
+    part_2(INPUT);
 }
