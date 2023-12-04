@@ -1,15 +1,97 @@
-fn part_1(_input: &str) {
-    todo!()
+const INPUT: &str = include_str!("../../input/day_04.txt");
+
+fn part_1(input: &str) {
+    let mut buf = Vec::new();
+    let mut sum = 0;
+
+    for line in input.lines() {
+        buf.clear();
+
+        let nums = line.split(':').skip(1).next().unwrap();
+        let mut sections = nums.split(" | ");
+        let winners = sections.next().unwrap();
+        let draws = sections.next().unwrap();
+
+        for num in winners.as_bytes().chunks(3) {
+            let x = std::str::from_utf8(num)
+                .unwrap()
+                .trim()
+                .parse::<u32>()
+                .unwrap();
+            buf.push(x);
+        }
+
+        let mut count = 0;
+
+        for num in draws.as_bytes().chunks(3) {
+            let draw = std::str::from_utf8(num)
+                .unwrap()
+                .trim()
+                .parse::<u32>()
+                .unwrap();
+
+            if buf.iter().any(|&x| x == draw) {
+                count += 1;
+            }
+        }
+
+        if count > 0 {
+            sum += 1 << (count - 1);
+        }
+    }
+
+    println!("{sum}");
 }
 
-fn part_2(_input: &str) {
-    todo!()
+fn part_2(input: &str) {
+    let mut buf = Vec::new();
+    let mut card_count = vec![1; 202];
+
+    for (i, line) in input.lines().enumerate() {
+        buf.clear();
+
+        let nums = line.split(':').skip(1).next().unwrap();
+        let mut sections = nums.split(" | ");
+        let winners = sections.next().unwrap();
+        let draws = sections.next().unwrap();
+
+        for num in winners.as_bytes().chunks(3) {
+            let x = std::str::from_utf8(num)
+                .unwrap()
+                .trim()
+                .parse::<u32>()
+                .unwrap();
+            buf.push(x);
+        }
+
+        let mut count = 0;
+
+        for num in draws.as_bytes().chunks(3) {
+            let draw = std::str::from_utf8(num)
+                .unwrap()
+                .trim()
+                .parse::<u32>()
+                .unwrap();
+
+            if buf.iter().any(|&x| x == draw) {
+                count += 1;
+            }
+        }
+
+        if count == 0 {
+            continue;
+        }
+
+        for j in (i + 1)..(i + 1 + count) {
+            card_count[j] += card_count[i];
+        }
+    }
+
+    let sum = card_count.iter().sum::<u64>();
+    println!("{sum}");
 }
 
 fn main() {
-    let input =
-        std::fs::read_to_string("input/day_04.txt").expect("Should be able to read input file");
-
-    part_1(&input);
-    part_2(&input);
+    part_1(INPUT);
+    part_2(INPUT);
 }
