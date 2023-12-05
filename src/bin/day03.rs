@@ -151,7 +151,7 @@ fn part_2(input: &str) {
     // Create lookup table for the numbers
     // -----------------------------------
 
-    let mut lookup = vec![0u64; SIZE*SIZE];
+    let mut lookup = vec![0u64; SIZE * SIZE];
     for (line_idx, span, num) in nums {
         for x in span {
             let p = line_idx * SIZE + x;
