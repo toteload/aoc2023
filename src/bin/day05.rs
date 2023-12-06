@@ -12,18 +12,20 @@ fn parse_nums(section: &str) -> Vec<u64> {
 
 #[derive(Debug)]
 struct Entry {
-    start_src: u64,
-    start_dst: u64,
-    len: u64,
+    pub src: Range<u64>,
+    pub dst: Range<u64>,
 }
 
 impl Entry {
-    fn src_range(&self) -> Range<u64> {
-        self.start_src..self.start_src + self.len
+    fn new(src_start: u64, dst_start: u64, len: u64) -> Entry {
+        Entry {
+            src: src_start..(src_start + len),
+            dst: dst_start..(dst_start + len),
+        }
     }
 
-    fn src_end(&self) -> u64 {
-        self.start_src + self.len
+    fn transform(&self, x: u64) -> u64 {
+        self.dst.start + x - self.src.start
     }
 }
 
@@ -35,36 +37,70 @@ fn parse_map(section: &str) -> Vec<Entry> {
                 unreachable!()
             };
 
-            Entry {
-                start_src,
-                start_dst,
-                len,
-            }
+            Entry::new(start_src, start_dst, len)
         })
         .collect::<Vec<_>>();
 
-    entries.sort_by_key(|e| e.start_src);
+    entries.sort_by_key(|e| e.src.start);
 
     entries
+}
+
+fn fill_gaps(map: Vec<Entry>) -> Vec<Entry> {
+    let n = map.len();
+    let mut res = Vec::new();
+
+    // Fill in any gaps between the ranges present in the map
+    for i in 1..n {
+        let prev = &map[i - 1];
+        let curr = &map[i];
+        if prev.src.end < curr.src.start {
+            res.push(Entry::new(
+                prev.src.end,
+                prev.src.end,
+                curr.src.start - prev.src.end,
+            ));
+        }
+    }
+
+    if map[0].src.start > 0 {
+        res.push(Entry::new(0, 0, map[0].src.start));
+    }
+
+    let Some(last) = map.last() else {
+        unreachable!()
+    };
+
+    if last.src.end < (u64::MAX - 1) {
+        res.push(Entry::new(
+            last.src.end,
+            last.src.end,
+            u64::MAX - last.src.end,
+        ));
+    }
+
+    res.extend(map);
+    res.sort_by_key(|e| e.src.start);
+
+    res
 }
 
 fn seed_to_location(maps: &[Vec<Entry>], seed: u64) -> u64 {
     let mut x = seed;
 
     for map in maps {
-        let entry_idx = map.partition_point(|&Entry { start_src, .. }| start_src <= x);
+        let entry_idx = map.partition_point(
+            |&Entry {
+                 src: Range { start, .. },
+                 ..
+             }| start <= x,
+        );
 
-        if entry_idx == 0 {
-            continue;
-        }
+        assert!(entry_idx != 0 && entry_idx != map.len());
 
         let entry = &map[entry_idx - 1];
-        let src_range = entry.start_src..(entry.start_src + entry.len);
-        if !src_range.contains(&x) {
-            continue;
-        }
 
-        x = entry.start_dst + (x - entry.start_src);
+        x = entry.transform(x);
     }
 
     x
@@ -76,6 +112,7 @@ fn part_1(input: &str) {
     let maps = sections[1..]
         .iter()
         .map(|&s| parse_map(s))
+        .map(fill_gaps)
         .collect::<Vec<_>>();
 
     let answer = seeds
@@ -88,76 +125,32 @@ fn part_1(input: &str) {
 }
 
 fn map_range(map: &[Entry], range: &Range<u64>) -> Vec<Range<u64>> {
-    let lo_idx = map.partition_point(|&Entry { start_src, .. }| start_src <= range.start);
-    let hi_idx = map.partition_point(|&Entry { start_src, .. }| start_src <= range.end);
+    let lo_idx = map.partition_point(
+        |&Entry {
+             src: Range { start, .. },
+             ..
+         }| start <= range.start,
+    ) - 1;
 
-    //println!("{map:?}");
-    //println!("{lo_idx}, {hi_idx}");
+    let hi_idx = map.partition_point(
+        |&Entry {
+             src: Range { start, .. },
+             ..
+         }| start <= range.end,
+    );
 
     let mut range = range.start..range.end;
     let mut res = Vec::new();
 
-    assert!(lo_idx != 0);
-    assert!(hi_idx != 0);
-
-    if lo_idx == map.len() {
-        return vec![range];
-    }
-
-    if hi_idx == map.len() {
-        let e = map.last().unwrap();
-        let start = e.start_src + e.len;
-        return vec![start..range.end];
-    }
-                //println!("{map:?}, {range:?}, {lo_idx}, {hi_idx}");
-
-    for at in (lo_idx-1)..hi_idx {
+    for at in lo_idx..hi_idx {
         if range.is_empty() {
             break;
         }
 
-        if !(map[at].src_range().contains(&range.start)) {
-            println!("{map:?}, {range:?}, {lo_idx}, {hi_idx}");
-        }
-
-        assert!(map[at].src_range().contains(&range.start));
-
-        //if !map[at].src_range().contains(&range.start) {
-        //    if !(map[at].start_src > range.start) {
-        //        println!("{map:?}, {range:?}, {lo_idx}, {hi_idx}");
-        //    }
-
-        //    res.push(range.start..map[at].start_src);
-        //    range = map[at].start_src..range.end;
-        //}
-
-        let end = range.end.min(map[at].src_end());
-        res.push(
-            (range.start + map[at].start_dst - map[at].start_src)
-                ..(end + map[at].start_dst - map[at].start_src),
-        );
+        let end = range.end.min(map[at].src.end);
+        res.push((map[at].transform(range.start)..map[at].transform(end)));
         range = end..range.end;
     }
-
-    res
-}
-
-fn fill_gaps(map: Vec<Entry>) -> Vec<Entry> {
-    let n = map.len();
-    let mut res = Vec::new();
-
-    for i in 1..n {
-        if map[i-1].start_src+map[i-1].len < map[i].start_src {
-            res.push(Entry {
-                start_src: map[i-1].start_src+map[i-1].len,
-                start_dst: map[i-1].start_src+map[i-1].len,
-                len: map[i].start_src - map[i-1].start_src+map[i-1].len,
-            });
-        }
-    }
-
-    res.extend(map);
-    res.sort_by_key(|e| e.start_src);
 
     res
 }
@@ -170,18 +163,15 @@ fn part_2(input: &str) {
         .chunks_exact(2)
         .map(|nums| {
             let &[start, len] = nums else { unreachable!() };
-            start..(start+len)
+            start..(start + len)
         })
         .collect::<Vec<_>>();
 
     let maps = sections[1..]
         .iter()
-        .map(|&s| fill_gaps(parse_map(s)))
+        .map(|&s| parse_map(s))
+        .map(fill_gaps)
         .collect::<Vec<_>>();
-
-    //println!("{:?}", map_range(&maps[1], &(14..50)));
-
-    println!("{seed_ranges:?}");
 
     let mut last_ranges = seed_ranges;
     for map in maps {
@@ -189,15 +179,11 @@ fn part_2(input: &str) {
         for r in last_ranges {
             out.extend(map_range(&map, &r));
         }
-        println!("{out:?}");
         last_ranges = out;
     }
 
-    //println!("{last_ranges:?}");
-
-    //let answer = last_ranges.iter().map(|r| r.start).min().unwrap();
-
-    //println!("{answer}");
+    let answer = last_ranges.iter().map(|r| r.start).min().unwrap();
+    println!("{answer}");
 }
 
 fn main() {
