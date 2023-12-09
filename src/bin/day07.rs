@@ -29,6 +29,21 @@ struct Hand {
     dealt: [u32; 5],
 }
 
+fn determine_hand_type(distinct_card_count: u32, max_same_card_count: u32) -> HandType {
+    use HandType::*;
+
+    match (distinct_card_count, max_same_card_count) {
+        (5, _) => HighCard,
+        (4, _) => OnePair,
+        (3, 2) => TwoPair,
+        (3, 3) => ThreeOfAKind,
+        (2, 3) => FullHouse,
+        (2, 4) => FourOfAKind,
+        (1, _) => FiveOfAKind,
+        _ => unreachable!(),
+    }
+}
+
 fn parse_entry(line: &str) -> (Hand, u64) {
     let mut sections = line.split_ascii_whitespace();
     let hand = sections.next().unwrap();
@@ -43,28 +58,17 @@ fn parse_entry(line: &str) -> (Hand, u64) {
         counter[i as usize] += 1;
     }
 
-    let mut group_count = 0;
-    let mut biggest_group_size = 0;
+    let mut distinct_card_count = 0;
+    let mut max_same_card_count = 0;
     for c in counter {
         if c > 0 {
-            group_count += 1;
+            distinct_card_count += 1;
         }
 
-        biggest_group_size = biggest_group_size.max(c);
+        max_same_card_count = max_same_card_count.max(c);
     }
 
-    use HandType::*;
-
-    let ty = match (group_count, biggest_group_size) {
-        (5, _) => HighCard,
-        (4, _) => OnePair,
-        (3, 2) => TwoPair,
-        (3, 3) => ThreeOfAKind,
-        (2, 3) => FullHouse,
-        (2, 4) => FourOfAKind,
-        (1, _) => FiveOfAKind,
-        _ => unreachable!(),
-    };
+    let ty = determine_hand_type(distinct_card_count, max_same_card_count);
 
     (Hand { ty, dealt }, bid)
 }
@@ -79,10 +83,10 @@ fn part_1(input: &str) {
         .map(|(i, (_, bid))| (i as u64 + 1) * bid)
         .sum::<u64>();
 
-    println!("{answer}");
+    assert_eq!(answer, 253954294);
 }
 
-fn card_value2(c: u8) -> u32 {
+fn card_value_with_joker(c: u8) -> u32 {
     match c {
         b'J' => 1,
         b'2'..=b'9' => (c - b'0') as u32,
@@ -94,91 +98,59 @@ fn card_value2(c: u8) -> u32 {
     }
 }
 
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
-enum HandType2 {
-    HighCard,
-    OnePair,
-    TwoPair,
-    ThreeOfAKind,
-    FullHouse,
-    FourOfAKind,
-    FiveOfAKind,
-}
+fn determine_hand_type_with_jokers(distinct_card_count: u32, max_same_card_count: u32, joker_count: u32) -> HandType {
+    use HandType::*;
 
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
-struct Hand2 {
-    ty: HandType2,
-    dealt: [u32; 5],
-}
+    match (distinct_card_count, max_same_card_count, joker_count) {
+        (_, _, 0) => determine_hand_type(distinct_card_count, max_same_card_count),
 
-fn find_best_joker_usage(group_count: u32, biggest_group_size: u32, joker_count: u32) -> (u32, u32) {
-    let n = group_count;
-    let s = biggest_group_size;
-    let j = joker_count;
+        (4, _, 1) => OnePair,
+        (3, _, 1) => ThreeOfAKind,
+        (2, 2, 1) => FullHouse,
+        (2, 3, 1) => FourOfAKind,
 
-    match (n, s, j) {
-        (_, _, 0) => (n, s),
+        (3, _, 2) => ThreeOfAKind,
+        (2, _, 2) => FourOfAKind,
 
-        (4, _, 1) => (4, 2),
-        (3, _, 1) => (3, 3),
-        (2, 2, 1) => (2, 3),
-        (2, 3, 1) => (2, 4),
+        (2, _, 3) => FourOfAKind,
 
-        (3, _, 2) => (3, 3),
-        (2, _, 2) => (2, 4),
-
-        (2, _, 3) => (2, 4),
-
-        _ => (1, 5),
+        _ => FiveOfAKind,
     }
 }
 
-fn parse_entry2(line: &str) -> (Hand2, u64) {
+fn parse_entry_part2(line: &str) -> (Hand, u64) {
     let mut sections = line.split_ascii_whitespace();
     let hand = sections.next().unwrap();
     let bid = sections.next().unwrap().parse::<u64>().unwrap();
 
     let dealt = <&[u8; 5]>::try_from(hand.as_bytes())
         .unwrap()
-        .map(card_value2);
+        .map(card_value_with_joker);
 
     let mut counter = [0; 15];
     for i in dealt {
         counter[i as usize] += 1;
     }
 
-    let mut group_count = 0;
-    let mut biggest_group_size = 0;
+    let mut distinct_card_count = 0;
+    let mut max_same_card_count = 0;
     for c in &counter[2..] {
         if *c > 0 {
-            group_count += 1;
+            distinct_card_count += 1;
         }
 
-        biggest_group_size = biggest_group_size.max(*c);
+        max_same_card_count = max_same_card_count.max(*c);
     }
 
     let joker_count = counter[1];
 
-    use HandType2::*;
+    let ty = determine_hand_type_with_jokers(distinct_card_count, max_same_card_count, joker_count);
 
-    let x = find_best_joker_usage(group_count, biggest_group_size, joker_count);
-
-    let ty = match x {
-        (5, _) => HighCard,
-        (4, _) => OnePair,
-        (3, 2) => TwoPair,
-        (3, 3) => ThreeOfAKind,
-        (2, 3) => FullHouse,
-        (2, 4) => FourOfAKind,
-        (1, _) => FiveOfAKind,
-        _ => unreachable!(),
-    };
-
-    (Hand2 { ty, dealt }, bid)
+    (Hand { ty, dealt }, bid)
 }
 
 fn part_2(input: &str) {
-    let mut entries = input.lines().map(parse_entry2).collect::<Vec<_>>();
+    let mut entries = input.lines().map(parse_entry_part2).collect::<Vec<_>>();
     entries.sort_unstable_by_key(|entry| entry.0);
 
     let answer = entries
@@ -187,7 +159,7 @@ fn part_2(input: &str) {
         .map(|(i, (_, bid))| (i as u64 + 1) * bid)
         .sum::<u64>();
 
-    println!("{answer}");
+    assert_eq!(answer, 254837398);
 }
 
 fn main() {
