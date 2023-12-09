@@ -36,9 +36,8 @@ fn prev_whole_number(x: f64) -> f64 {
 
 fn part_1(input: &str) {
     let lines = input.lines().collect::<Vec<_>>();
-    let time = parse_whitespace_separated_items::<f64>(lines[0].split(":").skip(1).next().unwrap());
-    let distance =
-        parse_whitespace_separated_items::<f64>(lines[1].split(":").skip(1).next().unwrap());
+    let time = parse_whitespace_separated_items::<f64>(lines[0].split(':').nth(1).unwrap());
+    let distance = parse_whitespace_separated_items::<f64>(lines[1].split(':').nth(1).unwrap());
 
     let mut answer = 1u64;
     for (t, d) in time.iter().zip(distance) {
@@ -52,7 +51,8 @@ fn part_1(input: &str) {
     println!("{answer}");
 }
 
-fn part_2(input: &str) {
+fn part_2(_input: &str) {
+    // TODO Parse the numbers from the input
     let t = 48938595.0;
     let d = 296192812361391.0;
     let [x0, x1] = quadratic_roots(1.0, -t, d);

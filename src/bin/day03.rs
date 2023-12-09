@@ -47,7 +47,7 @@ fn part_1(input: &str) {
             .filter_map(|(i, c)| c.is_ascii_digit().then_some(i))
             .peekable();
 
-        while let Some(_) = chars.peek() {
+        while chars.peek().is_some() {
             let start = chars.next().unwrap();
 
             let mut last = start;
@@ -126,7 +126,7 @@ fn part_2(input: &str) {
             .filter_map(|(i, c)| c.is_ascii_digit().then_some(i))
             .peekable();
 
-        while let Some(_) = chars.peek() {
+        while chars.peek().is_some() {
             let start = chars.next().unwrap();
 
             let mut last = start;

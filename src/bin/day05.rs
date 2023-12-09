@@ -121,7 +121,7 @@ fn part_1(input: &str) {
         .min()
         .unwrap();
 
-    println!("{answer}");
+    assert_eq!(answer, 525792406);
 }
 
 fn map_range(map: &[Entry], range: &Range<u64>) -> Vec<Range<u64>> {
@@ -142,13 +142,13 @@ fn map_range(map: &[Entry], range: &Range<u64>) -> Vec<Range<u64>> {
     let mut range = range.start..range.end;
     let mut res = Vec::new();
 
-    for at in lo_idx..hi_idx {
+    for entry in &map[lo_idx..hi_idx] {
         if range.is_empty() {
             break;
         }
 
-        let end = range.end.min(map[at].src.end);
-        res.push((map[at].transform(range.start)..map[at].transform(end)));
+        let end = range.end.min(entry.src.end);
+        res.push(entry.transform(range.start)..entry.transform(end));
         range = end..range.end;
     }
 
@@ -183,7 +183,7 @@ fn part_2(input: &str) {
     }
 
     let answer = last_ranges.iter().map(|r| r.start).min().unwrap();
-    println!("{answer}");
+    assert_eq!(answer, 79004094);
 }
 
 fn main() {

@@ -7,7 +7,7 @@ fn part_1(input: &str) {
     for line in input.lines() {
         buf.clear();
 
-        let nums = line.split(':').skip(1).next().unwrap();
+        let nums = line.split(':').nth(1).unwrap();
         let mut sections = nums.split(" | ");
         let winners = sections.next().unwrap();
         let draws = sections.next().unwrap();
@@ -40,7 +40,7 @@ fn part_1(input: &str) {
         }
     }
 
-    println!("{sum}");
+    assert_eq!(sum, 23235);
 }
 
 fn part_2(input: &str) {
@@ -50,7 +50,7 @@ fn part_2(input: &str) {
     for (i, line) in input.lines().enumerate() {
         buf.clear();
 
-        let nums = line.split(':').skip(1).next().unwrap();
+        let nums = line.split(':').nth(1).unwrap();
         let mut sections = nums.split(" | ");
         let winners = sections.next().unwrap();
         let draws = sections.next().unwrap();
@@ -88,7 +88,8 @@ fn part_2(input: &str) {
     }
 
     let sum = card_count.iter().sum::<u64>();
-    println!("{sum}");
+
+    assert_eq!(sum, 5920640);
 }
 
 fn main() {
