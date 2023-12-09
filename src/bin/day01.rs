@@ -61,36 +61,32 @@ fn part_2(input: &str) {
     let mut answer = 0;
 
     for line in input.lines() {
-        let a = {
-            let mut y = 0;
+        let a = 'search: {
             for start in 0..line.len() {
                 let res = alt((a_digit, written_number))(&line[start..]);
                 if let Ok((_, x)) = res {
-                    y = x;
-                    break;
+                    break 'search x;
                 }
             }
 
-            y
+            unreachable!();
         };
 
-        let b = {
-            let mut y = 0;
+        let b = 'search: {
             for start in (0..line.len()).rev() {
                 let res = alt((a_digit, written_number))(&line[start..]);
                 if let Ok((_, x)) = res {
-                    y = x;
-                    break;
+                    break 'search x;
                 }
             }
 
-            y
+            unreachable!();
         };
 
         answer += a * 10 + b;
     }
 
-    println!("{answer}")
+    assert_eq!(answer, 54719);
 }
 
 fn main() {
