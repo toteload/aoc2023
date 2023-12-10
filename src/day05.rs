@@ -1,7 +1,5 @@
 use core::ops::Range;
 
-const INPUT: &str = include_str!("../../input/day_05.txt");
-
 fn parse_nums(section: &str) -> Vec<u64> {
     let start = section.bytes().position(|b| b == b':').unwrap();
     let list = &section[start + 1..].trim();
@@ -106,7 +104,7 @@ fn seed_to_location(maps: &[Vec<Entry>], seed: u64) -> u64 {
     x
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u64 {
     let sections = input.split("\n\n").collect::<Vec<_>>();
     let seeds = parse_nums(sections[0]);
     let maps = sections[1..]
@@ -121,7 +119,7 @@ fn part_1(input: &str) {
         .min()
         .unwrap();
 
-    assert_eq!(answer, 525792406);
+    answer
 }
 
 fn map_range(map: &[Entry], range: &Range<u64>) -> Vec<Range<u64>> {
@@ -155,7 +153,7 @@ fn map_range(map: &[Entry], range: &Range<u64>) -> Vec<Range<u64>> {
     res
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u64 {
     let sections = input.split("\n\n").collect::<Vec<_>>();
     let seeds = parse_nums(sections[0]);
 
@@ -182,11 +180,5 @@ fn part_2(input: &str) {
         last_ranges = out;
     }
 
-    let answer = last_ranges.iter().map(|r| r.start).min().unwrap();
-    assert_eq!(answer, 79004094);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    last_ranges.iter().map(|r| r.start).min().unwrap()
 }

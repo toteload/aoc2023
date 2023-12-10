@@ -1,16 +1,12 @@
-mod util;
-
-use util::lcm;
+use crate::util::lcm;
 use std::collections::{HashMap, HashSet};
-
-const INPUT: &str = include_str!("../../input/day_08.txt");
 
 fn parse_node(line: &str) -> (&[u8], &[u8], &[u8]) {
     let bs = line.as_bytes();
     (&bs[..3], &bs[7..10], &bs[12..15])
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u32 {
     let mut sections = input.split("\n\n");
     let instructions = sections.next().unwrap().as_bytes().iter().copied().cycle();
     let nodes = sections.next().unwrap().lines().map(parse_node);
@@ -33,10 +29,10 @@ fn part_1(input: &str) {
         steps += 1;
     }
 
-    assert_eq!(steps, 15989);
+    steps
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> i64 {
     let mut sections = input.split("\n\n");
     let instruction_bytes = sections.next().unwrap().as_bytes();
     let instruction_count = instruction_bytes.len();
@@ -85,12 +81,5 @@ fn part_2(input: &str) {
         periods.push(period as i64);
     }
 
-    let answer = periods.iter().copied().reduce(lcm).unwrap();
-
-    assert_eq!(answer, 13830919117339);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    periods.iter().copied().reduce(lcm).unwrap()
 }

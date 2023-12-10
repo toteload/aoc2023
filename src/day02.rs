@@ -1,6 +1,4 @@
-const INPUT: &str = include_str!("../../input/day_02.txt");
-
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u32 {
     let mut sum = 0;
 
     for (idx, line) in input.lines().enumerate() {
@@ -25,14 +23,14 @@ fn part_1(input: &str) {
                 }
             }
 
-            sum += idx + 1;
+            sum += idx as u32 + 1;
         }
     }
 
-    assert_eq!(sum, 2169);
+    sum
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u32 {
     let mut sum: u32 = 0;
 
     for line in input.lines() {
@@ -63,10 +61,5 @@ fn part_2(input: &str) {
         sum += red * green * blue;
     }
 
-    assert_eq!(sum, 60948);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    sum
 }

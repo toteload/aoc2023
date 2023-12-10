@@ -51,4 +51,3 @@ fn extended_gcd(a: i64, b: i64) -> (i64, i64, i64) {
 //     let z = (a0 * y * n1 + a1 * x * n0) % (n0 * n1);
 //     (if z < 0 { z + (n0 + n1) } else { z }, n0 * n1)
 // }).unwrap();
-

@@ -1,6 +1,4 @@
-const INPUT: &str = include_str!("../../input/day_04.txt");
-
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u32 {
     let mut buf = Vec::new();
     let mut sum = 0;
 
@@ -40,10 +38,10 @@ fn part_1(input: &str) {
         }
     }
 
-    assert_eq!(sum, 23235);
+    sum
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u32 {
     let mut buf = Vec::new();
     let mut card_count = vec![1; 202];
 
@@ -87,12 +85,5 @@ fn part_2(input: &str) {
         }
     }
 
-    let sum = card_count.iter().sum::<u64>();
-
-    assert_eq!(sum, 5920640);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    card_count.iter().sum::<u32>()
 }

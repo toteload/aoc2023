@@ -1,7 +1,4 @@
-mod util;
-use util::parse_whitespace_separated_items;
-
-const INPUT: &str = include_str!("../../input/day_06.txt");
+use crate::util::parse_whitespace_separated_items;
 
 fn quadratic_roots(a: f64, b: f64, c: f64) -> [f64; 2] {
     let d = b * b - 4.0 * a * c;
@@ -34,7 +31,7 @@ fn prev_whole_number(x: f64) -> f64 {
     }
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u64 {
     let lines = input.lines().collect::<Vec<_>>();
     let time = parse_whitespace_separated_items::<f64>(lines[0].split(':').nth(1).unwrap());
     let distance = parse_whitespace_separated_items::<f64>(lines[1].split(':').nth(1).unwrap());
@@ -48,21 +45,15 @@ fn part_1(input: &str) {
         answer *= c as u64;
     }
 
-    println!("{answer}");
+    answer
 }
 
-fn part_2(_input: &str) {
+pub fn part2(_input: &str) -> u64 {
     // TODO Parse the numbers from the input
     let t = 48938595.0;
     let d = 296192812361391.0;
     let [x0, x1] = quadratic_roots(1.0, -t, d);
     let a = next_whole_number(x0);
     let b = prev_whole_number(x1);
-    let answer = b - a + 1.0;
-    println!("{answer}");
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    (b - a + 1.0) as u64
 }

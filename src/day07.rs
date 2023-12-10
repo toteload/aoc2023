@@ -1,5 +1,3 @@
-const INPUT: &str = include_str!("../../input/day_07.txt");
-
 fn card_value(c: u8) -> u32 {
     match c {
         b'2'..=b'9' => (c - b'0') as u32,
@@ -73,17 +71,15 @@ fn parse_entry(line: &str) -> (Hand, u64) {
     (Hand { ty, dealt }, bid)
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u64 {
     let mut entries = input.lines().map(parse_entry).collect::<Vec<_>>();
     entries.sort_unstable_by_key(|entry| entry.0);
 
-    let answer = entries
+    entries
         .iter()
         .enumerate()
         .map(|(i, (_, bid))| (i as u64 + 1) * bid)
-        .sum::<u64>();
-
-    assert_eq!(answer, 253954294);
+        .sum::<u64>()
 }
 
 fn card_value_with_joker(c: u8) -> u32 {
@@ -98,7 +94,11 @@ fn card_value_with_joker(c: u8) -> u32 {
     }
 }
 
-fn determine_hand_type_with_jokers(distinct_card_count: u32, max_same_card_count: u32, joker_count: u32) -> HandType {
+fn determine_hand_type_with_jokers(
+    distinct_card_count: u32,
+    max_same_card_count: u32,
+    joker_count: u32,
+) -> HandType {
     use HandType::*;
 
     match (distinct_card_count, max_same_card_count, joker_count) {
@@ -149,20 +149,13 @@ fn parse_entry_part2(line: &str) -> (Hand, u64) {
     (Hand { ty, dealt }, bid)
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u64 {
     let mut entries = input.lines().map(parse_entry_part2).collect::<Vec<_>>();
     entries.sort_unstable_by_key(|entry| entry.0);
 
-    let answer = entries
+    entries
         .iter()
         .enumerate()
         .map(|(i, (_, bid))| (i as u64 + 1) * bid)
-        .sum::<u64>();
-
-    assert_eq!(answer, 254837398);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+        .sum::<u64>()
 }

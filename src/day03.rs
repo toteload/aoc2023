@@ -1,6 +1,5 @@
 use core::ops::Range;
 
-const INPUT: &str = include_str!("../../input/day_03.txt");
 const SIZE: usize = 140;
 const MAXP: usize = SIZE * SIZE;
 
@@ -17,7 +16,7 @@ fn neighbors(p: usize) -> [usize; 8] {
     ]
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u64 {
     // Parse all the symbols
     // ---------------------
 
@@ -93,10 +92,10 @@ fn part_1(input: &str) {
         }
     }
 
-    println!("{sum}");
+    sum
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u64 {
     // Parse all the symbols
     // ---------------------
 
@@ -197,10 +196,5 @@ fn part_2(input: &str) {
         sum += buf.iter().product::<u64>();
     }
 
-    println!("{sum}");
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    sum
 }

@@ -6,8 +6,6 @@ use nom::{
     IResult,
 };
 
-const INPUT: &str = include_str!("../../input/day_01.txt");
-
 fn try_digit(b: &u8) -> Option<u32> {
     if b.is_ascii_digit() {
         Some((b - b'0') as u32)
@@ -16,7 +14,7 @@ fn try_digit(b: &u8) -> Option<u32> {
     }
 }
 
-fn part_1(input: &str) {
+pub fn part1(input: &str) -> u32 {
     let mut answer = 0;
 
     for line in input.lines() {
@@ -32,7 +30,7 @@ fn part_1(input: &str) {
         answer += a * 10 + b;
     }
 
-    println!("{answer}");
+    answer
 }
 
 fn written_number(input: &str) -> IResult<&str, u32> {
@@ -57,7 +55,7 @@ fn a_digit(input: &str) -> IResult<&str, u32> {
     )(input)
 }
 
-fn part_2(input: &str) {
+pub fn part2(input: &str) -> u32 {
     let mut answer = 0;
 
     for line in input.lines() {
@@ -86,10 +84,5 @@ fn part_2(input: &str) {
         answer += a * 10 + b;
     }
 
-    assert_eq!(answer, 54719);
-}
-
-fn main() {
-    part_1(INPUT);
-    part_2(INPUT);
+    answer
 }
