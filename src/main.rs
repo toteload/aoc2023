@@ -127,7 +127,7 @@ fn print_statistics(samples: &[Duration]) {
     } else if avg > 0.001 {
         print!("{:>6.2}ms", avg * 1_000.0);
     } else if avg > 0.000_001 {
-        print!("{:>6.2}us", avg * 1_000_000.0);
+        print!("{:>6.2}μs", avg * 1_000_000.0);
     } else {
         print!("{:>6.2}ns", avg * 1_000_000_000.0);
     }
@@ -138,7 +138,7 @@ fn print_statistics(samples: &[Duration]) {
     } else if stddev > 0.001 {
         print!("{:>6.2}ms", stddev * 1_000.0);
     } else if stddev > 0.000_001 {
-        print!("{:>6.2}us", stddev * 1_000_000.0);
+        print!("{:>6.2}μs", stddev * 1_000_000.0);
     } else {
         print!("{:>6.2}ns", stddev * 1_000_000_000.0);
     }
