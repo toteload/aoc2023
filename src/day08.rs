@@ -1,30 +1,44 @@
 use crate::util::lcm;
-use std::collections::{HashMap, HashSet};
 
-fn parse_node(line: &str) -> (&[u8], &[u8], &[u8]) {
+const START: u32 = 0;
+const END: u32 = 2 * (25 + 26 * (25 + (26 * 25)));
+
+fn parse_node(line: &str) -> (u32, u32, u32) {
     let bs = line.as_bytes();
-    (&bs[..3], &bs[7..10], &bs[12..15])
+    (
+        2 * ((bs[0] - b'A') as u32 + 26 * ((bs[1] - b'A') as u32 + (26 * (bs[2] - b'A') as u32))),
+        2 * ((bs[7] - b'A') as u32 + 26 * ((bs[8] - b'A') as u32 + (26 * (bs[9] - b'A') as u32))),
+        2 * ((bs[12] - b'A') as u32
+            + 26 * ((bs[13] - b'A') as u32 + (26 * (bs[14] - b'A') as u32))),
+    )
 }
 
 pub fn part1(input: &str) -> u32 {
     let mut sections = input.split("\n\n");
-    let instructions = sections.next().unwrap().as_bytes().iter().copied().cycle();
+    let instructions = sections
+        .next()
+        .unwrap()
+        .as_bytes()
+        .iter()
+        .copied()
+        .map(|x| if x == b'L' { 0u32 } else { 1u32 })
+        .cycle();
     let nodes = sections.next().unwrap().lines().map(parse_node);
 
-    let mut lookup = HashMap::new();
+    let mut lookup = [0u32; 26 * 26 * 26 * 2];
     for (from, left, right) in nodes {
-        lookup.insert((from, b'L'), left);
-        lookup.insert((from, b'R'), right);
+        lookup[from as usize] = left;
+        lookup[(from | 1) as usize] = right;
     }
 
     let mut steps = 0;
-    let mut at: &[u8] = b"AAA";
+    let mut at = START;
     for inst in instructions {
-        if at == b"ZZZ" {
+        if at == END {
             break;
         }
 
-        at = lookup.get(&(at, inst)).unwrap();
+        at = lookup[(at | inst) as usize];
 
         steps += 1;
     }
@@ -34,52 +48,73 @@ pub fn part1(input: &str) -> u32 {
 
 pub fn part2(input: &str) -> i64 {
     let mut sections = input.split("\n\n");
-    let instruction_bytes = sections.next().unwrap().as_bytes();
-    let instruction_count = instruction_bytes.len();
-    let instructions = instruction_bytes.iter().copied().cycle();
+    let instructions = sections
+        .next()
+        .unwrap()
+        .as_bytes()
+        .iter()
+        .copied()
+        .map(|x| if x == b'L' { 0u32 } else { 1u32 })
+        .cycle();
     let nodes = sections.next().unwrap().lines().map(parse_node);
 
     let mut ghosts = Vec::new();
-    let mut lookup = HashMap::new();
+    let mut lookup = [0u32; 26 * 26 * 26 * 2];
     for (from, left, right) in nodes {
-        lookup.insert((from, b'L'), left);
-        lookup.insert((from, b'R'), right);
+        lookup[from as usize] = left;
+        lookup[(from | 1) as usize] = right;
 
-        if from[2] == b'A' {
+        if (from / (2 * 26 * 26)) == 0 {
             ghosts.push(from);
         }
     }
 
-    let mut periods = Vec::new();
+    // There were some patterns in the input that I assume are true for everybodies input.
+    // Based on some of these patterns optimizations are made.
+    //
+    // - Each ghost has only one candidate exit node.
+    // - The period of each ghost is the same as the distance from the start to the exit node
+    //   for each ghost.
+    // - The period of each ghost is the product of two prime numbers. Each ghost has one of these
+    //   primes in common.
 
-    for ghost in ghosts.iter() {
+    let mut answer = 1;
+
+    for ghost in ghosts {
         let mut i = 0;
         let mut at = ghost;
-        let mut history = Vec::new();
-        let mut visited = HashSet::new();
 
         let insts = instructions.clone();
 
-        // Walk around with a ghost and stop when we find a node where we have been before with the
-        // same instruction index.
+        // Walk around with a ghost until we hit an exit node.
         for inst in insts {
-            if !visited.insert((at, i)) {
+            if at / (2 * 26 * 26) == 25 {
                 break;
             }
 
-            history.push((at, i));
+            at = lookup[(at | inst) as usize];
 
-            at = lookup.get(&(at, inst)).unwrap();
-            i = (i + 1) % instruction_count;
+            i += 1;
         }
 
-        // For my input the number of steps it takes to reach an exit node happens to be the same
-        // as the size of period. I assume that this is the case for everyone.
-        let offset = history.iter().position(|p| p == &(at, i)).unwrap();
-        let period = history.len() - offset;
-
-        periods.push(period as i64);
+        answer = lcm(answer, i as i64);
     }
 
-    periods.iter().copied().reduce(lcm).unwrap()
+    answer
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn part1() {
+        assert_eq!(super::part1(include_str!("../input/day_08.txt")), 15989);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(
+            super::part2(include_str!("../input/day_08.txt")),
+            13830919117339
+        );
+    }
 }

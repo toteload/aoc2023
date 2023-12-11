@@ -13,6 +13,7 @@ mod day07;
 mod day08;
 mod day09;
 mod day10;
+mod day11;
 
 use clap::Parser;
 
@@ -40,6 +41,7 @@ fn input(day: u8) -> &'static str {
         8 => include_str!("../input/day_08.txt"),
         9 => include_str!("../input/day_09.txt"),
         10 => include_str!("../input/day_10.txt"),
+        11 => include_str!("../input/day_11.txt"),
         _ => todo!(),
     }
 }
@@ -69,8 +71,7 @@ fn run(day: u8, part: u8) {
     match_run_day!(8, day08);
     match_run_day!(9, day09);
     match_run_day!(10, day10);
-    //match_run_day!(11, day01);
-    //match_run_day!(12, day01);
+    match_run_day!(11, day11);
 }
 
 fn bench_samples(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
@@ -107,40 +108,50 @@ fn bench_samples(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
     match_day!(8, day08);
     match_day!(9, day09);
     match_day!(10, day10);
+    match_day!(11, day11);
 
     todo!()
 }
 
-fn print_statistics(samples: &[Duration]) {
+fn print_statistics(samples: Vec<Duration>) {
+    let mut samples = samples;
+    samples.sort();
+
+    // Only keep the best 90% of samples to remove outliers.
+    samples.truncate((samples.len() * 10) / 9);
+
     let n = samples.len() as f64;
     let sum = samples.iter().map(|d| d.as_secs_f64()).sum::<f64>();
     let avg = sum / n;
     let stddev = {
-        let s = samples.iter().map(|d| (d.as_secs_f64() - avg).powf(2.0)).sum::<f64>();
+        let s = samples
+            .iter()
+            .map(|d| (d.as_secs_f64() - avg).powf(2.0))
+            .sum::<f64>();
         (s / n).sqrt()
     };
 
     print!("avg. time: ");
 
     if avg > 1.0 {
-        print!("{:>6.2}s", avg);
+        print!("{:>3.0}s", avg);
     } else if avg > 0.001 {
-        print!("{:>6.2}ms", avg * 1_000.0);
+        print!("{:>3.0}ms", avg * 1_000.0);
     } else if avg > 0.000_001 {
-        print!("{:>6.2}μs", avg * 1_000_000.0);
+        print!("{:>3.0}μs", avg * 1_000_000.0);
     } else {
-        print!("{:>6.2}ns", avg * 1_000_000_000.0);
+        print!("{:>3.0}ns", avg * 1_000_000_000.0);
     }
 
     print!(" +- ");
     if stddev > 1.0 {
-        print!("{:>6.2}s", stddev);
+        print!("{:>3.0}s", stddev);
     } else if stddev > 0.001 {
-        print!("{:>6.2}ms", stddev * 1_000.0);
+        print!("{:>3.0}ms", stddev * 1_000.0);
     } else if stddev > 0.000_001 {
-        print!("{:>6.2}μs", stddev * 1_000_000.0);
+        print!("{:>3.0}μs", stddev * 1_000_000.0);
     } else {
-        print!("{:>6.2}ns", stddev * 1_000_000_000.0);
+        print!("{:>3.0}ns", stddev * 1_000_000_000.0);
     }
 
     println!("");
@@ -153,8 +164,8 @@ fn main() {
         for day in 1..=25 {
             for part in 1..=2 {
                 print!("Day {day:2}, part {part} | ");
-                let samples = bench_samples(day, part, 10);
-                print_statistics(&samples);
+                let samples = bench_samples(day, part, 50);
+                print_statistics(samples);
             }
         }
         return;

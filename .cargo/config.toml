@@ -2,5 +2,6 @@
 rustflags = ["-Ctarget-cpu=native"]
 
 [profile.release]
-lto = true
+lto = false
+debug = true
 panic = "abort"
