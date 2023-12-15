@@ -17,6 +17,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 
 use clap::Parser;
 
@@ -48,6 +49,7 @@ fn input(day: u8) -> &'static str {
         12 => include_str!("../input/day_12.txt"),
         13 => include_str!("../input/day_13.txt"),
         14 => include_str!("../input/day_14.txt"),
+        15 => include_str!("../input/day_15.txt"),
         _ => todo!(),
     }
 }
@@ -82,6 +84,7 @@ fn run(day: u8, part: u8) {
     match_run_day!(12, day12);
     match_run_day!(13, day13);
     match_run_day!(14, day14);
+    match_run_day!(15, day15);
 
     todo!()
 }
@@ -124,6 +127,7 @@ fn bench_samples(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
     match_day!(12, day12);
     match_day!(13, day13);
     match_day!(14, day14);
+    match_day!(15, day15);
 
     todo!()
 }

@@ -12,15 +12,19 @@ impl Bitmap {
         let lines = input.lines().collect::<Vec<_>>();
         let width = lines[0].len();
         let height = lines.len();
+
         let data = lines
             .into_iter()
             .flat_map(|line| line.as_bytes().iter().copied())
             .collect();
-        Bitmap {
+
+        let res = Bitmap {
             data,
             width,
             height,
-        }
+        };
+
+        res.rotate_clockwise()
     }
 
     fn rotate_clockwise(&self) -> Bitmap {
@@ -88,36 +92,36 @@ impl Bitmap {
 
         load as u32
     }
-
-    fn print(&self) {
-        for line in self.data.as_slice().chunks_exact(self.width) {
-            println!("{}", std::str::from_utf8(line).unwrap());
-        }
-    }
 }
 
 pub fn part1(input: &str) -> u32 {
-    Bitmap::parse(input).rotate_clockwise().tilt().total_load()
+    Bitmap::parse(input).tilt().total_load()
 }
 
 pub fn part2(input: &str) -> u32 {
     let mut platform = Bitmap::parse(input);
+    let mut history = Vec::new();
     let mut mem = HashSet::new();
+    let last;
 
-    for _ in 0..1_000_000_000 {
+    loop {
         for _ in 0..4 {
-            platform = platform.rotate_clockwise().tilt();
+            platform = platform.tilt().rotate_clockwise();
         }
 
         if mem.contains(&platform) {
-            println!("Seen before!!! History size: {}", mem.len());
+            last = history.iter().position(|x| x == &platform);
             break;
-        } else {
-            mem.insert(platform.clone());
         }
+
+        mem.insert(platform.clone());
+        history.push(platform.clone());
     }
 
-    platform.total_load()
+    let Some(i) = last else { unreachable!() };
+    let period = mem.len() - i;
+    let offset = (999_999_999 - i) % period;
+    history[i + offset].total_load()
 }
 
 #[cfg(test)]
@@ -129,6 +133,6 @@ mod tests {
 
     #[test]
     fn part2() {
-        assert_eq!(super::part2(include_str!("../input/day_14.txt")), 0);
+        assert_eq!(super::part2(include_str!("../input/day_14.txt")), 95273);
     }
 }
