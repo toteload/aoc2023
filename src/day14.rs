@@ -101,27 +101,22 @@ pub fn part1(input: &str) -> u32 {
 pub fn part2(input: &str) -> u32 {
     let mut platform = Bitmap::parse(input);
     let mut history = Vec::new();
-    let mut mem = HashSet::new();
-    let last;
 
-    loop {
+    let start = loop {
         for _ in 0..4 {
             platform = platform.tilt().rotate_clockwise();
         }
 
-        if mem.contains(&platform) {
-            last = history.iter().position(|x| x == &platform);
-            break;
+        if let Some(idx) = history.iter().position(|x| x == &platform) {
+            break idx;
         }
 
-        mem.insert(platform.clone());
         history.push(platform.clone());
-    }
+    };
 
-    let Some(i) = last else { unreachable!() };
-    let period = mem.len() - i;
-    let offset = (999_999_999 - i) % period;
-    history[i + offset].total_load()
+    let period = history.len() - start;
+    let offset = (999_999_999 - start) % period;
+    history[start + offset].total_load()
 }
 
 #[cfg(test)]
