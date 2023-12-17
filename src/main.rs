@@ -18,6 +18,8 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
+mod day17;
 
 use clap::Parser;
 
@@ -50,6 +52,8 @@ fn input(day: u8) -> &'static str {
         13 => include_str!("../input/day_13.txt"),
         14 => include_str!("../input/day_14.txt"),
         15 => include_str!("../input/day_15.txt"),
+        16 => include_str!("../input/day_16.txt"),
+        17 => include_str!("../input/day_17.txt"),
         _ => todo!(),
     }
 }
@@ -85,11 +89,13 @@ fn run(day: u8, part: u8) {
     match_run_day!(13, day13);
     match_run_day!(14, day14);
     match_run_day!(15, day15);
+    match_run_day!(16, day16);
+    match_run_day!(17, day17);
 
     todo!()
 }
 
-fn bench_samples(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
+fn bench(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
     macro_rules! match_day {
         ($day:expr, $day_name:ident) => {
             match_day!($day, $day_name, 1, part1);
@@ -128,65 +134,101 @@ fn bench_samples(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
     match_day!(13, day13);
     match_day!(14, day14);
     match_day!(15, day15);
+    match_day!(16, day16);
+    match_day!(17, day17);
 
     todo!()
 }
 
-fn print_statistics(samples: Vec<Duration>) {
-    let mut samples = samples;
-    samples.sort();
-
-    // Only keep the best 90% of samples to remove outliers.
-    samples.truncate((samples.len() * 10) / 9);
-
-    let n = samples.len() as f64;
-    let sum = samples.iter().map(|d| d.as_secs_f64()).sum::<f64>();
-    let avg = sum / n;
-    let stddev = {
-        let s = samples
-            .iter()
-            .map(|d| (d.as_secs_f64() - avg).powf(2.0))
-            .sum::<f64>();
-        (s / n).sqrt()
-    };
-
-    print!("avg. time: ");
-
-    if avg > 1.0 {
-        print!("{:>3.0}s", avg);
-    } else if avg > 0.001 {
-        print!("{:>3.0}ms", avg * 1_000.0);
-    } else if avg > 0.000_001 {
-        print!("{:>3.0}μs", avg * 1_000_000.0);
+fn print_time(secs: f64) {
+    if secs > 1.0 {
+        print!("{:>3.0}s", secs);
+    } else if secs > 0.001 {
+        print!("{:>3.0}ms", secs * 1_000.0);
+    } else if secs > 0.000_001 {
+        print!("{:>3.0}μs", secs * 1_000_000.0);
     } else {
-        print!("{:>3.0}ns", avg * 1_000_000_000.0);
+        print!("{:>3.0}ns", secs * 1_000_000_000.0);
+    }
+}
+
+#[derive(Debug)]
+struct Benchmark {
+    name: String,
+    mean: f64,
+    stddev: f64,
+    percentage: f64,
+}
+
+impl Benchmark {
+    fn from_samples(name: String, samples: Vec<Duration>) -> Benchmark {
+        let mut samples = samples;
+        samples.sort();
+
+        // Only keep the best 90% of samples to remove outliers.
+        samples.truncate((samples.len() * 10) / 9);
+
+        let n = samples.len() as f64;
+        let sum = samples.iter().map(|d| d.as_secs_f64()).sum::<f64>();
+        let mean = sum / n;
+        let stddev = {
+            let s = samples
+                .iter()
+                .map(|d| (d.as_secs_f64() - mean).powf(2.0))
+                .sum::<f64>();
+            (s / n).sqrt()
+        };
+
+        Benchmark {
+            name,
+            mean,
+            stddev,
+            percentage: 0.0,
+        }
     }
 
-    print!(" +- ");
-    if stddev > 1.0 {
-        print!("{:>3.0}s", stddev);
-    } else if stddev > 0.001 {
-        print!("{:>3.0}ms", stddev * 1_000.0);
-    } else if stddev > 0.000_001 {
-        print!("{:>3.0}μs", stddev * 1_000_000.0);
-    } else {
-        print!("{:>3.0}ns", stddev * 1_000_000_000.0);
+    fn print(&self) {
+        print!("{} | ", self.name);
+        print_time(self.mean);
+        print!(" +- ");
+        print_time(self.stddev);
+        println!(" | {:>4.1}%", self.percentage);
     }
-
-    println!("");
 }
 
 fn main() {
     let args = Args::parse();
 
+    let sample_count = 10;
+    let max_day = 17;
+
     if args.bench {
-        for day in 1..=25 {
+        let mut benchmarks = Vec::new();
+
+        for day in 1..=max_day {
             for part in 1..=2 {
-                print!("Day {day:2}, part {part} | ");
-                let samples = bench_samples(day, part, 50);
-                print_statistics(samples);
+                let samples = bench(day, part, sample_count);
+                benchmarks.push(Benchmark::from_samples(
+                    format!("Day {day:2}, part {part}"),
+                    samples,
+                ));
             }
         }
+
+        let total_time = benchmarks.iter().fold(0.0, |acc, x| acc + x.mean);
+
+        for x in benchmarks.iter_mut() {
+            x.percentage = x.mean * 100.0 / total_time;
+        }
+
+        for x in benchmarks {
+            x.print();
+        }
+
+        print!("\nTotal time taken: ");
+        print_time(total_time);
+        println!();
+
         return;
     }
 
