@@ -112,6 +112,9 @@ pub fn part1(input: &str) -> u32 {
     let (mut a, mut da) = (start, da);
     let (mut b, mut db) = (start, db);
 
+    // TODO You probably don't have to step from both directions. You might be able to complete a
+    // loop going in one direction and then take half the length.
+
     loop {
         (a, da, _) = step(&tiles, a, da);
 
