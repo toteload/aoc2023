@@ -99,9 +99,46 @@ pub fn part1(input: &str) -> u32 {
 }
 
 fn parse_line_part2(line: &str) -> (Direction, isize) {
-    todo!()
+    let x = line.split_ascii_whitespace().nth(2).unwrap();
+    let d = isize::from_str_radix(&x[2..7]).unwrap();
+
+    use Direction::*;
+    let dir = match &x[7..8] {
+        "0" => Right,
+        "1" => Down,
+        "2" => Left,
+        "3" => Up,
+        _ => unreachable!(),
+    };
+
+    (dir, d)
 }
 
 pub fn part2(input: &str) -> u32 {
+    let instructions = input.lines().map(parse_line_part2);
+
+    let mut ys = vec![0];
+    let mut segments = Vec::new();
+    let mut start = (0, 0);
+
+    for (dir, distance) in instructions {
+        let end = {
+            let (x, y) = start;
+
+            use Direction::*;
+            match dir {
+                Right => (x + distance, y),
+                Down => (x, y + distance),
+                Left => (x - distance, y),
+                Up => (x, y - distance),
+            }
+        };
+
+        ys.push(end.1);
+
+        segments.push((start, end));
+        start = end;
+    }
+
     todo!()
 }
