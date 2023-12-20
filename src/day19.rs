@@ -225,7 +225,7 @@ fn count_combinations(workflows: &HashMap<&str, Workflow>, label: &str, part: [R
                     }
                     Op::LessThan => {
                         let mut res = part;
-                        (res[idx], part[idx]) = part[idx].split(*limit as u64 +1);
+                        (res[idx], part[idx]) = part[idx].split(*limit as u64);
                         res
                     },
                 };
