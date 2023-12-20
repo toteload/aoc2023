@@ -1,9 +1,11 @@
-#[derive(PartialEq, Eq)]
+use core::ops::Range;
+
+#[derive(PartialEq, Eq, Debug)]
 enum Direction {
     Up,
     Right,
     Down,
-    Left
+    Left,
 }
 
 fn parse_line_part1(line: &str) -> (Direction, isize) {
@@ -18,7 +20,12 @@ fn parse_line_part1(line: &str) -> (Direction, isize) {
         _ => unreachable!(),
     };
 
-    let d = line.split_ascii_whitespace().nth(1).unwrap().parse::<isize>().unwrap();
+    let d = line
+        .split_ascii_whitespace()
+        .nth(1)
+        .unwrap()
+        .parse::<isize>()
+        .unwrap();
 
     (dir, d as isize)
 }
@@ -100,7 +107,7 @@ pub fn part1(input: &str) -> u32 {
 
 fn parse_line_part2(line: &str) -> (Direction, isize) {
     let x = line.split_ascii_whitespace().nth(2).unwrap();
-    let d = isize::from_str_radix(&x[2..7]).unwrap();
+    let d = isize::from_str_radix(&x[2..7], 16).unwrap();
 
     use Direction::*;
     let dir = match &x[7..8] {
@@ -114,18 +121,27 @@ fn parse_line_part2(line: &str) -> (Direction, isize) {
     (dir, d)
 }
 
-pub fn part2(input: &str) -> u32 {
+fn overlap<Idx: Ord + Copy>(a: &Range<Idx>, b: &Range<Idx>) -> Range<Idx> {
+    if b.start >= a.end || a.start >= b.end {
+        a.start..a.start
+    } else {
+        (a.start.max(b.start))..(a.end.min(b.end))
+    }
+}
+
+pub fn part2(input: &str) -> usize {
     let instructions = input.lines().map(parse_line_part2);
 
-    let mut ys = vec![0];
+    let mut ys = Vec::new();
     let mut segments = Vec::new();
-    let mut start = (0, 0);
+    let mut at = (0, 0);
 
     for (dir, distance) in instructions {
-        let end = {
-            let (x, y) = start;
+        use Direction::*;
 
-            use Direction::*;
+        let end = {
+            let (x, y) = at;
+
             match dir {
                 Right => (x + distance, y),
                 Down => (x, y + distance),
@@ -134,11 +150,61 @@ pub fn part2(input: &str) -> u32 {
             }
         };
 
-        ys.push(end.1);
+        let y = end.1.max(at.1);
 
-        segments.push((start, end));
-        start = end;
+        if let Err(idx) = ys.binary_search(&y) {
+            ys.insert(idx, y);
+        }
+
+        if matches!(dir, Down | Up) {
+            segments.push((at, end));
+        }
+
+        at = end;
     }
 
-    todo!()
+    let mut answer = 0;
+
+    let mut xxs = Vec::new();
+
+    for hs in ys.windows(2) {
+        let (h, y) = {
+            let &[a, b] = hs else { unreachable!() };
+            let h = b - a + 1;
+            (h as usize, a)
+        };
+
+        let mut xs = Vec::new();
+
+        for ((x, y0), (_, y1)) in &segments {
+            let ya = *y0.min(y1);
+            let yb = *y0.max(y1);
+            if (ya..yb).contains(&y) {
+                if let Err(idx) = xs.binary_search(&x) {
+                    xs.insert(idx, x);
+                }
+            }
+        }
+
+        let scanned = xs
+            .as_slice()
+            .chunks_exact(2)
+            .map(|x| (x[1] - x[0] + 1) as usize)
+            .sum::<usize>();
+        xxs.push(xs);
+
+        answer += scanned * h;
+    }
+
+    for window in xxs.as_slice().windows(2) {
+        let [a, b] = window else { unreachable!() };
+
+        for x in a.as_slice().chunks_exact(2).map(|x| (*x[0]..(x[1] + 1))) {
+            for y in b.as_slice().chunks_exact(2).map(|x| (*x[0]..(x[1] + 1))) {
+                answer -= overlap(&x, &y).len();
+            }
+        }
+    }
+
+    answer
 }

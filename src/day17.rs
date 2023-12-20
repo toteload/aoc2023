@@ -1,4 +1,9 @@
-enum Direction { UP, RIGHT, DOWN, LEFT }
+enum Direction {
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT,
+}
 
 struct Crucible {
     pos: Position,
@@ -20,7 +25,7 @@ impl Position {
 fn neighbors(p: Position, width: usize, height: usize) -> [Option<Position>; 9] {
     // This is wrong. The crucible can not reverse.
     todo!();
-    
+
     let mut res = [None; 9];
     let mut i = 0usize;
 
@@ -85,7 +90,10 @@ fn heuristic(p: Position, goal: Position) -> u32 {
 
 fn astar(heatmap: &[u8], width: usize, height: usize) -> u32 {
     let start = Position { x: 0, y: 0 };
-    let goal = Position { x: width - 1, y: height - 1 };
+    let goal = Position {
+        x: width - 1,
+        y: height - 1,
+    };
 
     let mut frontier = vec![start];
 
@@ -103,14 +111,18 @@ fn astar(heatmap: &[u8], width: usize, height: usize) -> u32 {
         }
 
         for n in neighbors(current, width, height).into_iter() {
-            let Some(n) = n else { break; };
+            let Some(n) = n else {
+                break;
+            };
             let nidx = n.as_idx(width);
             let ngscore = gscore[current.as_idx(width)] + heatmap[nidx] as u32;
             if ngscore < gscore[nidx] {
                 gscore[nidx] = ngscore;
                 fscore[nidx] = ngscore + heuristic(n, goal);
 
-                if let Err(i) = frontier.binary_search_by(|p| fscore[p.as_idx(width)].cmp(&fscore[nidx])) {
+                if let Err(i) =
+                    frontier.binary_search_by(|p| fscore[p.as_idx(width)].cmp(&fscore[nidx]))
+                {
                     frontier.insert(i, n);
                 }
             }

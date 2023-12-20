@@ -123,7 +123,10 @@ pub fn part2(input: &str) -> u32 {
         let e = count_energized_tiles(&grid, &(Point::new(x as isize, 0), DOWN));
         answer = answer.max(e);
 
-        let e = count_energized_tiles(&grid, &(Point::new(x as isize, (grid.height - 1) as isize), UP));
+        let e = count_energized_tiles(
+            &grid,
+            &(Point::new(x as isize, (grid.height - 1) as isize), UP),
+        );
         answer = answer.max(e);
     }
 
@@ -131,7 +134,10 @@ pub fn part2(input: &str) -> u32 {
         let e = count_energized_tiles(&grid, &(Point::new(0, y as isize), RIGHT));
         answer = answer.max(e);
 
-        let e = count_energized_tiles(&grid, &(Point::new((grid.width - 1) as isize, y as isize), LEFT));
+        let e = count_energized_tiles(
+            &grid,
+            &(Point::new((grid.width - 1) as isize, y as isize), LEFT),
+        );
         answer = answer.max(e);
     }
 
