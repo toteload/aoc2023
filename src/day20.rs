@@ -1,4 +1,8 @@
 use std::collections::{HashMap, VecDeque};
+use std::mem::MaybeUninit;
+
+const PULSE_HI: i8 = 1;
+const PULSE_LO: i8 = -1;
 
 #[derive(Clone, Copy)]
 struct Range {
@@ -12,56 +16,106 @@ impl Range {
     }
 }
 
-enum Module {
+#[derive(Clone)]
+enum ModuleKind {
     Broadcaster,
+    Dummy,
     FlipFlop(i8),
-    Conjuction(Vec<(usize, i8)>),
+    Conjunction(Vec<(usize, i8)>),
 }
 
-struct State {
+struct Module<'a> {
+    kind: ModuleKind,
+    id: &'a str,
+    outputs: Range,
+}
+
+impl<'a> Module<'a> {
+    fn dummy() -> Module<'a> {
+        Module {
+            kind: ModuleKind::Dummy,
+            id: "dummy",
+            outputs: Range { start: 0, end: 0 },
+        }
+    }
+}
+
+struct State<'a> {
     groups: Vec<usize>,
-    modules: Vec<(Module, Range)>,
+    modules: Vec<Module<'a>>,
 }
 
-impl State {
+impl State<'_> {
     fn push_button(&mut self) -> (u64, u64) {
-        let mut los = 0;
+        let mut los = 1;
         let mut his = 0;
 
         let mut signals = VecDeque::new();
-        let (_, broadcast_range) = self.modules[0];
-        signals.push_back((0, broadcast_range, -1));
+        let Module { outputs: broadcast_range, .. } = self.modules[0];
+        signals.push_back((0, broadcast_range, PULSE_LO));
 
         while let Some((source, range, pulse)) = signals.pop_front() {
-            if pulse == 1 {
+            if pulse == PULSE_HI {
                 his += range.len();
             } else {
                 los += range.len();
             }
 
             for idx in &self.groups[range.start..range.end] {
-                let (m, outputs) = &mut self.modules[*idx];
+                let Module { kind: m, outputs, .. }= &mut self.modules[*idx];
                 match m {
-                    Module::FlipFlop(x) if pulse == -1 => {
+                    ModuleKind::FlipFlop(x) if pulse == PULSE_LO => {
                         let y = *x * -1;
                         *x = y;
 
                         signals.push_back((*idx, *outputs, y));
                     },
-                    Module::Conjuction(inputs) => {
-                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| i == idx) else { unreachable!() };
+                    ModuleKind::Conjunction(inputs) => {
+                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else { unreachable!() };
                         *x = pulse;
 
-                        let all_hi = inputs.iter().all(|&(_, x)| x == 1);
+                        let all_hi = inputs.iter().all(|&(_, x)| x == PULSE_HI);
 
-                        signals.push_back((*idx, *outputs, if all_hi { 1 } else { -1 }));
+                        signals.push_back((*idx, *outputs, if all_hi { PULSE_LO } else { PULSE_HI }));
                     },
-                    _ => unreachable!(),
+                    _ => (),
                 }
             }
         }
 
         (los, his)
+    }
+
+    fn push_button_part2(&mut self) -> bool {
+        let mut signals = VecDeque::new();
+        let Module { outputs: broadcast_range, .. } = self.modules[0];
+        signals.push_back((0, broadcast_range, PULSE_LO));
+
+        while let Some((source, range, pulse)) = signals.pop_front() {
+            for idx in &self.groups[range.start..range.end] {
+                let Module { kind: m, outputs, .. }= &mut self.modules[*idx];
+                match m {
+                    ModuleKind::Dummy if pulse == PULSE_LO => return true,
+                    ModuleKind::FlipFlop(x) if pulse == PULSE_LO => {
+                        let y = *x * -1;
+                        *x = y;
+
+                        signals.push_back((*idx, *outputs, y));
+                    },
+                    ModuleKind::Conjunction(inputs) => {
+                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else { unreachable!() };
+                        *x = pulse;
+
+                        let all_hi = inputs.iter().all(|&(_, x)| x == PULSE_HI);
+
+                        signals.push_back((*idx, *outputs, if all_hi { PULSE_LO } else { PULSE_HI }));
+                    },
+                    _ => (),
+                }
+            }
+        }
+
+        false
     }
 }
 
@@ -84,7 +138,7 @@ fn get_or_add_index(ids: &mut HashMap<u32, usize>, id: u32) -> usize {
     *ids.entry(id).or_insert(n)
 }
 
-fn parse_line(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line: &str) -> (usize, Module, Range) {
+fn parse_module<'a>(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line: &'a str) -> (usize, Module<'a>) {
     let kind = &line[0..1];
 
     if kind == "b" {
@@ -98,21 +152,25 @@ fn parse_line(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line: &str
 
         let end = groups.len();
 
-        return (0, Module::Broadcaster, Range { start, end });
+        return (0, Module {
+            id: "broadcaster",
+            kind: ModuleKind::Broadcaster, 
+            outputs: Range { start, end },
+        });
     }
 
-    let module = match kind {
-        "%" => Module::FlipFlop(-1),
-        "&" => Module::Conjuction(Vec::new()),
+    let kind = match kind {
+        "%" => ModuleKind::FlipFlop(PULSE_LO),
+        "&" => ModuleKind::Conjunction(Vec::new()),
         _ => unreachable!(),
     };
 
     let mut parts = line.split(" -> ");
 
-    let id_str = parts.next().unwrap();
-    let id = get_or_add_index(ids, parse_id(&id_str[1..]));
+    let id_str = &parts.next().unwrap()[1..];
+    let idx = get_or_add_index(ids, parse_id(id_str));
 
-    let start = ids.len();
+    let start = groups.len();
 
     let outputs = parts.next().unwrap().split(", ").map(parse_id);
 
@@ -120,40 +178,50 @@ fn parse_line(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line: &str
         groups.push(get_or_add_index(ids, id));
     }
 
-    let end = ids.len();
+    let end = groups.len();
 
-    (id, module, Range { start, end })
+    (idx, Module {
+        id: id_str,
+        kind, 
+        outputs: Range { start, end },
+    })
 }
 
 fn parse_circuit(input: &str) -> State {
     let mut ids = HashMap::new();
 
     let mut groups = Vec::new();
-    let mut modules = Vec::new();
+    let mut modules: Vec<Module> = Vec::new();
 
     ids.insert(0, 0);
 
     for line in input.lines() {
-        let (idx, m, range) = parse_line(&mut ids, &mut groups, line);
+        let (idx, m) = parse_module(&mut ids, &mut groups, line);
 
-        if modules.len() < idx {
-            modules.reserve(modules.len() - idx + 1);
-            unsafe {
-                modules.set_len(idx+1);
-            }
+        if modules.len() <= idx {
+            modules.resize_with(idx + 1, || Module::dummy());
         }
 
-        modules[idx] = (m, range);
+        modules[idx] = m;
     }
 
-    for (conjuction_idx, (m, _)) in modules.iter_mut().enumerate() {
-        if let Module::Conjuction(inputs) = m {
-            for (idx, (_, range)) in modules.iter().enumerate() {
-                for output_idx in &groups[range.start..range.end] {
-                    if *output_idx == conjuction_idx {
-                        inputs.push((conjuction_idx, -1));
-                    }
-                }
+    let n = modules.len();
+
+    for conjunction_idx in 0..n {
+        match modules[conjunction_idx].kind {
+            ModuleKind::Conjunction(_) => (),
+            _ => continue,
+        }
+
+        for idx in 0..n {
+            let outputs = {
+                let Module { outputs: range, .. } = modules[idx];
+                &groups[range.start..range.end]
+            };
+
+            if outputs.contains(&conjunction_idx) {
+                let ModuleKind::Conjunction(inputs) = &mut modules[conjunction_idx].kind else { unreachable!() };
+                inputs.push((idx, PULSE_LO));
             }
         }
     }
@@ -180,5 +248,16 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    todo!()
+    let mut state = parse_circuit(input);
+    let mut answer = 1;
+
+    while !state.push_button_part2() {
+        answer += 1;
+
+        if answer % 100_000 == 0 {
+            println!("{answer}");
+        }
+    }
+
+    answer
 }
