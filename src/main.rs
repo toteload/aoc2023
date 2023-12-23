@@ -23,6 +23,7 @@ mod day17;
 mod day18;
 mod day19;
 mod day20;
+mod day21;
 
 use clap::Parser;
 
@@ -60,6 +61,7 @@ fn input(day: u8) -> &'static str {
         18 => include_str!("../input/day_18.txt"),
         19 => include_str!("../input/day_19.txt"),
         20 => include_str!("../input/day_20.txt"),
+        21 => include_str!("../input/day_21.txt"),
         _ => todo!(),
     }
 }
@@ -100,6 +102,7 @@ fn run(day: u8, part: u8) {
     match_run_day!(18, day18);
     match_run_day!(19, day19);
     match_run_day!(20, day20);
+    match_run_day!(21, day21);
 
     todo!()
 }
@@ -144,13 +147,14 @@ fn bench(day: u8, part: u8, sample_count: usize) -> Vec<Duration> {
     match_day!(14, day14);
     match_day!(15, day15);
     match_day!(16, day16);
-    if day == 17 {
+    if day == 17 || (day == 21 && part == 2) {
         return vec![std::time::Duration::from_millis(0); sample_count];
     }
     //match_day!(17, day17);
     match_day!(18, day18);
     match_day!(19, day19);
     match_day!(20, day20);
+    match_day!(21, day21);
 
     todo!()
 }
@@ -215,7 +219,7 @@ fn main() {
     let args = Args::parse();
 
     let sample_count = 10;
-    let max_day = 19;
+    let max_day = 21;
 
     if args.bench {
         let mut benchmarks = Vec::new();
