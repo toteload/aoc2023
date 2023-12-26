@@ -51,7 +51,10 @@ impl State<'_> {
         let mut his = 0;
 
         let mut signals = VecDeque::new();
-        let Module { outputs: broadcast_range, .. } = self.modules[0];
+        let Module {
+            outputs: broadcast_range,
+            ..
+        } = self.modules[0];
         signals.push_back((0, broadcast_range, PULSE_LO));
 
         while let Some((source, range, pulse)) = signals.pop_front() {
@@ -62,22 +65,30 @@ impl State<'_> {
             }
 
             for idx in &self.groups[range.start..range.end] {
-                let Module { kind: m, outputs, .. }= &mut self.modules[*idx];
+                let Module {
+                    kind: m, outputs, ..
+                } = &mut self.modules[*idx];
                 match m {
                     ModuleKind::FlipFlop(x) if pulse == PULSE_LO => {
                         let y = *x * -1;
                         *x = y;
 
                         signals.push_back((*idx, *outputs, y));
-                    },
+                    }
                     ModuleKind::Conjunction(inputs) => {
-                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else { unreachable!() };
+                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else {
+                            unreachable!()
+                        };
                         *x = pulse;
 
                         let all_hi = inputs.iter().all(|&(_, x)| x == PULSE_HI);
 
-                        signals.push_back((*idx, *outputs, if all_hi { PULSE_LO } else { PULSE_HI }));
-                    },
+                        signals.push_back((
+                            *idx,
+                            *outputs,
+                            if all_hi { PULSE_LO } else { PULSE_HI },
+                        ));
+                    }
                     _ => (),
                 }
             }
@@ -88,12 +99,17 @@ impl State<'_> {
 
     fn push_button_part2(&mut self) -> bool {
         let mut signals = VecDeque::new();
-        let Module { outputs: broadcast_range, .. } = self.modules[0];
+        let Module {
+            outputs: broadcast_range,
+            ..
+        } = self.modules[0];
         signals.push_back((0, broadcast_range, PULSE_LO));
 
         while let Some((source, range, pulse)) = signals.pop_front() {
             for idx in &self.groups[range.start..range.end] {
-                let Module { kind: m, outputs, .. }= &mut self.modules[*idx];
+                let Module {
+                    kind: m, outputs, ..
+                } = &mut self.modules[*idx];
                 match m {
                     ModuleKind::Dummy if pulse == PULSE_LO => return true,
                     ModuleKind::FlipFlop(x) if pulse == PULSE_LO => {
@@ -101,15 +117,21 @@ impl State<'_> {
                         *x = y;
 
                         signals.push_back((*idx, *outputs, y));
-                    },
+                    }
                     ModuleKind::Conjunction(inputs) => {
-                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else { unreachable!() };
+                        let Some((_, x)) = inputs.iter_mut().find(|(i, _)| *i == source) else {
+                            unreachable!()
+                        };
                         *x = pulse;
 
                         let all_hi = inputs.iter().all(|&(_, x)| x == PULSE_HI);
 
-                        signals.push_back((*idx, *outputs, if all_hi { PULSE_LO } else { PULSE_HI }));
-                    },
+                        signals.push_back((
+                            *idx,
+                            *outputs,
+                            if all_hi { PULSE_LO } else { PULSE_HI },
+                        ));
+                    }
                     _ => (),
                 }
             }
@@ -138,7 +160,11 @@ fn get_or_add_index(ids: &mut HashMap<u32, usize>, id: u32) -> usize {
     *ids.entry(id).or_insert(n)
 }
 
-fn parse_module<'a>(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line: &'a str) -> (usize, Module<'a>) {
+fn parse_module<'a>(
+    ids: &mut HashMap<u32, usize>,
+    groups: &mut Vec<usize>,
+    line: &'a str,
+) -> (usize, Module<'a>) {
     let kind = &line[0..1];
 
     if kind == "b" {
@@ -152,11 +178,14 @@ fn parse_module<'a>(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line
 
         let end = groups.len();
 
-        return (0, Module {
-            id: "broadcaster",
-            kind: ModuleKind::Broadcaster, 
-            outputs: Range { start, end },
-        });
+        return (
+            0,
+            Module {
+                id: "broadcaster",
+                kind: ModuleKind::Broadcaster,
+                outputs: Range { start, end },
+            },
+        );
     }
 
     let kind = match kind {
@@ -180,11 +209,14 @@ fn parse_module<'a>(ids: &mut HashMap<u32, usize>, groups: &mut Vec<usize>, line
 
     let end = groups.len();
 
-    (idx, Module {
-        id: id_str,
-        kind, 
-        outputs: Range { start, end },
-    })
+    (
+        idx,
+        Module {
+            id: id_str,
+            kind,
+            outputs: Range { start, end },
+        },
+    )
 }
 
 fn parse_circuit(input: &str) -> State {
@@ -220,16 +252,15 @@ fn parse_circuit(input: &str) -> State {
             };
 
             if outputs.contains(&conjunction_idx) {
-                let ModuleKind::Conjunction(inputs) = &mut modules[conjunction_idx].kind else { unreachable!() };
+                let ModuleKind::Conjunction(inputs) = &mut modules[conjunction_idx].kind else {
+                    unreachable!()
+                };
                 inputs.push((idx, PULSE_LO));
             }
         }
     }
 
-    State {
-        groups,
-        modules,
-    }
+    State { groups, modules }
 }
 
 pub fn part1(input: &str) -> u64 {

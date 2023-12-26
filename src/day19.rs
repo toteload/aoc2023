@@ -16,7 +16,16 @@ impl Range {
     }
 
     fn split(&self, mid: u64) -> (Self, Self) {
-        (Self { start: self.start, end: mid }, Self { start: mid, end: self.end })
+        (
+            Self {
+                start: self.start,
+                end: mid,
+            },
+            Self {
+                start: mid,
+                end: self.end,
+            },
+        )
     }
 }
 
@@ -220,14 +229,14 @@ fn count_combinations(workflows: &HashMap<&str, Workflow>, label: &str, part: [R
                 let parts_if_matched = match op {
                     Op::GreaterThan => {
                         let mut res = part;
-                        (part[idx], res[idx]) = part[idx].split(*limit as u64 +1);
+                        (part[idx], res[idx]) = part[idx].split(*limit as u64 + 1);
                         res
                     }
                     Op::LessThan => {
                         let mut res = part;
                         (res[idx], part[idx]) = part[idx].split(*limit as u64);
                         res
-                    },
+                    }
                 };
 
                 match action {

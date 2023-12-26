@@ -24,6 +24,9 @@ mod day18;
 mod day19;
 mod day20;
 mod day21;
+mod day22;
+mod day23;
+mod day24;
 
 use clap::Parser;
 
@@ -62,6 +65,9 @@ fn input(day: u8) -> &'static str {
         19 => include_str!("../input/day_19.txt"),
         20 => include_str!("../input/day_20.txt"),
         21 => include_str!("../input/day_21.txt"),
+        22 => include_str!("../input/day_22.txt"),
+        23 => include_str!("../input/day_23.txt"),
+        24 => include_str!("../input/day_24.txt"),
         _ => todo!(),
     }
 }
@@ -103,6 +109,9 @@ fn run(day: u8, part: u8) {
     match_run_day!(19, day19);
     match_run_day!(20, day20);
     match_run_day!(21, day21);
+    match_run_day!(22, day22);
+    match_run_day!(23, day23);
+    match_run_day!(24, day24);
 
     todo!()
 }
