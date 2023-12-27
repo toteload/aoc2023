@@ -128,13 +128,17 @@ fn count_plots(garden: &Garden, start: Position, max_distance: u32) -> u32 {
     let mut frontier = VecDeque::new();
     frontier.push_back((0, start));
 
-    let mut ds = vec![u32::MAX - 1; plots.len()];
+    const NIL: u32 = u32::MAX - 1;
+    let mut ds = vec![NIL; plots.len()];
 
     while let Some((d, p)) = frontier.pop_front() {
+        if !p.is_valid(*width, *height) {
+            continue;
+        }
+
         let idx = p.as_index(*width);
         if d > max_distance
-            || !p.is_valid(*width, *height)
-            || ds[idx] != u32::MAX
+            || ds[idx] != NIL
             || plots[idx] == b'#'
         {
             continue;
@@ -164,14 +168,10 @@ fn count_plots(garden: &Garden, start: Position, max_distance: u32) -> u32 {
 fn count_column_plots(garden: &Garden, start: Position, n: usize, max_steps: usize) -> u32 {
     let mut answer = 0;
 
-    let remaining_distance = n + max_steps % n;
+    answer += count_plots(&garden, start, (n / 2 + max_steps % n) as u32);
 
-    let d = (remaining_distance - n / 2) as u32;
-    answer += count_plots(&garden, start, d);
-
-    if remaining_distance >= (n + n / 2) {
-        let d = (remaining_distance - (n + n / 2)) as u32;
-        answer += count_plots(&garden, start, d);
+    if max_steps % n > n / 2 {
+        answer += count_plots(&garden, start, (max_steps % n - n / 2) as u32);
     }
 
     answer
@@ -194,6 +194,7 @@ pub fn part2(input: &str) -> u64 {
     let n = width; 
 
     let max_steps = 26501365;
+    //let max_steps = 50;
 
     let full_garden_distance = max_steps / n;
     let full_garden_count = {
@@ -206,7 +207,7 @@ pub fn part2(input: &str) -> u64 {
     let full_garden_odd_plot_count = {
         let mut count = 0;
 
-        for c in plots.iter().step_by(2) {
+        for c in plots.iter().skip(1).step_by(2) {
             if *c != b'#' {
                 count += 1;
             }
@@ -217,14 +218,14 @@ pub fn part2(input: &str) -> u64 {
 
     let mut answer = full_garden_count as u64 * full_garden_odd_plot_count;
 
-    let remaining_distance = n + max_steps % n;
+    let r = (max_steps % n) as u32;
 
     // Columns
     // -------
 
     // Top
     let start = Position { x: (n / 2) as isize, y: (n - 1) as isize };
-    answer += count_column_plots(&garden, start, n, max_steps) as u64;
+    answer += dbg!(count_column_plots(&garden, start, n, max_steps) as u64);
 
     // Bottom
     let start = Position { x: (n / 2) as isize, y: 0 };
@@ -238,5 +239,37 @@ pub fn part2(input: &str) -> u64 {
     let start = Position { x: (n - 1) as isize, y: (n / 2) as isize };
     answer += count_column_plots(&garden, start, n, max_steps) as u64;
 
-    todo!()
+    println!("{answer}");
+
+    // Diagonals
+    // ---------
+
+    let m = full_garden_distance as u64;
+    let s = n as u32;
+
+    // Top right
+    answer += dbg!(count_plots(&garden, Position { x: 0, y: (n - 1) as isize }, s + r)) as u64 * m;
+    if r > s / 2 {
+        answer += dbg!(count_plots(&garden, Position { x: 0, y: (n - 1) as isize }, r - s / 2)) as u64 * (m + 1);
+    }
+
+    // Bottom right
+    answer += dbg!(count_plots(&garden, Position { x: 0, y: 0 }, s + r)) as u64 * m;
+    if r > s / 2 {
+        answer += count_plots(&garden, Position { x: 0, y: 0 }, r - s / 2) as u64 * (m + 1);
+    }
+
+    // Top left
+    answer += dbg!(count_plots(&garden, Position { x: (n - 1) as isize, y: (n - 1) as isize }, s + r)) as u64 * m;
+    if r > s / 2 {
+        answer += count_plots(&garden, Position { x: (n - 1) as isize, y: (n - 1) as isize }, r - s / 2) as u64 * (m + 1);
+    }
+
+    // Bottom left
+    answer += dbg!(count_plots(&garden, Position { x: (n - 1) as isize, y: 0 }, s + r)) as u64 * m;
+    if r > s / 2 {
+        answer += count_plots(&garden, Position { x: (n - 1) as isize, y: 0 }, r - s / 2) as u64 * (m + 1);
+    }
+
+    answer
 }
